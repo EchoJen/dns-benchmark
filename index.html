@@ -1,0 +1,146 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DNS 全球测速 - 延迟排行榜</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌐</text></svg>">
+</head>
+<body>
+
+    <header class="header">
+        <div class="container header-inner">
+            <div class="logo">
+                <span class="logo-icon">🌐</span>
+                <h1>DNS 全球测速</h1>
+            </div>
+            <div class="header-info">
+                <div class="update-badge" id="updateBadge">
+                    <span class="badge-icon">🔄</span>
+                    <span id="updateStatus">等待刷新…</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- 控制栏 -->
+        <section class="controls">
+            <div class="controls-left">
+                <button class="btn btn-primary" id="btnRefresh" onclick="startBenchmark()">
+                    <span class="btn-icon">⚡</span> 开始测速
+                </button>
+                <button class="btn btn-secondary" onclick="resetAndRefresh()">
+                    <span class="btn-icon">🗑️</span> 重置缓存
+                </button>
+            </div>
+            <div class="controls-right">
+                <label class="filter-label">
+                    <span class="filter-icon">🔍</span>
+                    <input type="text" id="searchInput" placeholder="搜索 DNS 名称或 IP…" oninput="filterServers()">
+                </label>
+                <label class="filter-label">
+                    <span class="filter-icon">🌍</span>
+                    <select id="regionFilter" onchange="filterServers()">
+                        <option value="all">所有地区</option>
+                        <option value="全球">🌏 全球</option>
+                        <option value="中国">🇨🇳 中国</option>
+                        <option value="北美">🇺🇸 北美</option>
+                        <option value="欧洲">🇪🇺 欧洲</option>
+                        <option value="亚洲">🌏 亚洲</option>
+                    </select>
+                </label>
+            </div>
+        </section>
+
+        <!-- 状态 & 进度 -->
+        <section class="progress-section" id="progressSection" style="display:none">
+            <div class="progress-header">
+                <span id="progressText">正在测速…</span>
+                <span id="progressCount">0 / 0</span>
+            </div>
+            <div class="progress-bar-track">
+                <div class="progress-bar-fill" id="progressFill" style="width:0%"></div>
+            </div>
+            <div class="progress-current" id="progressCurrent">—</div>
+        </section>
+
+        <!-- 统计摘要 -->
+        <section class="summary" id="summarySection">
+            <div class="summary-card">
+                <div class="summary-value" id="totalServers">0</div>
+                <div class="summary-label">DNS 服务器</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-value" id="onlineServers">0</div>
+                <div class="summary-label">在线</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-value" id="fastestServer">—</div>
+                <div class="summary-label">最快延迟</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-value" id="avgLatency">—</div>
+                <div class="summary-label">平均延迟</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-value" id="lastUpdate">—</div>
+                <div class="summary-label">上次更新</div>
+            </div>
+        </section>
+
+        <!-- 表格 -->
+        <section class="table-section">
+            <div class="table-wrapper">
+                <table class="dns-table" id="dnsTable">
+                    <thead>
+                        <tr>
+                            <th class="col-rank">#</th>
+                            <th class="col-name" onclick="sortBy('name')">
+                                名称 <span class="sort-arrow" id="sortArrowName">⇅</span>
+                            </th>
+                            <th class="col-ip" onclick="sortBy('ip')">
+                                IP 地址 <span class="sort-arrow" id="sortArrowIp">⇅</span>
+                            </th>
+                            <th class="col-latency" onclick="sortBy('latency')">
+                                延迟 <span class="sort-arrow" id="sortArrowLatency">▼</span>
+                            </th>
+                            <th class="col-provider" onclick="sortBy('provider')">
+                                提供商 <span class="sort-arrow" id="sortArrowProvider">⇅</span>
+                            </th>
+                            <th class="col-region">地区</th>
+                            <th class="col-status">状态</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dnsTableBody">
+                        <tr class="empty-row">
+                            <td colspan="7" class="empty-cell">
+                                <div class="empty-state">
+                                    <span class="empty-icon">📡</span>
+                                    <p>点击 <strong>"开始测速"</strong> 测试所有 DNS 服务器延迟</p>
+                                    <p class="empty-hint">测试使用 DNS-over-HTTPS (DoH) 测量真实解析延迟</p>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 底部说明 -->
+        <footer class="footer">
+            <div class="footer-content">
+                <p>📌 延迟数据基于 DNS-over-HTTPS (DoH) 请求测量，结果受网络环境影响</p>
+                <p>🔄 数据每 <strong>24 小时</strong> 自动刷新，也可手动点击 "开始测速"</p>
+                <p>⚡ 延迟越低越好：<span class="tag tag-green">&lt;50ms</span> 
+                   <span class="tag tag-yellow">50-150ms</span> 
+                   <span class="tag tag-orange">150-300ms</span> 
+                   <span class="tag tag-red">&gt;300ms</span></p>
+            </div>
+        </footer>
+    </main>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
