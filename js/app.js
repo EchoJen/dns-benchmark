@@ -92,86 +92,68 @@ let isTesting = false;
 function measureLatency(server) {
     return new Promise((resolve) => {
         if (!server.doh) {
-            resolve({ server, latency: null, online: false, error: '无 DoH 端点' });
+            imagePing(server).then(resolve);
             return;
         }
 
         const dohUrl = server.doh;
-        const dnsQuery = new URLSearchParams({
-            name: 'example.com',
-            type: 'A',
-        });
-        const url = dohUrl + (dohUrl.includes('?') ? '&' : '?') + dnsQuery.toString();
+        const params = new URLSearchParams({ name: 'example.com', type: 'A' });
+        const url = dohUrl + (dohUrl.includes('?') ? '&' : '?') + params.toString();
 
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
-
         const start = performance.now();
 
+        // 使用 no-cors 模式绕过 CORS 跨域限制
         fetch(url, {
             method: 'GET',
-            headers: { 'Accept': 'application/dns-json' },
-            signal: controller.signal,
-            mode: 'cors',
-        })
-            .then(res => {
-                clearTimeout(timeoutId);
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                return res.json();
-            })
-            .then(data => {
-                const elapsed = performance.now() - start;
-                resolve({ server, latency: Math.round(elapsed), online: true, error: null });
-            })
-            .catch(err => {
-                clearTimeout(timeoutId);
-                // 没有 DoH 或 CORS 失败，尝试 HTTP ping
-                if (err.name === 'AbortError') {
-                    resolve({ server, latency: null, online: false, error: '超时' });
-                } else if (err.message.includes('CORS') || err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
-                    // 回退：尝试通过 IP 端口测试
-                    fallbackPing(server).then(resolve);
-                } else {
-                    resolve({ server, latency: null, online: false, error: err.message });
-                }
-            });
-    });
-}
-
-// 回退：HTTP ping 测试
-function fallbackPing(server) {
-    return new Promise((resolve) => {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 3000);
-        const start = performance.now();
-
-        fetch('http://' + server.ip, {
-            method: 'HEAD',
             signal: controller.signal,
             mode: 'no-cors',
         })
             .then(() => {
                 clearTimeout(timeoutId);
-                const elapsed = performance.now() - start;
-                resolve({ server, latency: Math.round(elapsed), online: true, error: null });
+                resolve({ server, latency: Math.round(performance.now() - start), online: true, error: null });
             })
-            .catch(() => {
+            .catch(err => {
                 clearTimeout(timeoutId);
-                // 尝试 DNS-over-TLS 端口
-                const controller2 = new AbortController();
-                const timeoutId2 = setTimeout(() => controller2.abort(), 3000);
-                const start2 = performance.now();
-                fetch('https://' + server.ip + ':853', { method: 'HEAD', signal: controller2.signal, mode: 'no-cors' })
-                    .then(() => {
-                        clearTimeout(timeoutId2);
-                        const elapsed = performance.now() - start2;
-                        resolve({ server, latency: Math.round(elapsed), online: true, error: null });
-                    })
-                    .catch(() => {
-                        clearTimeout(timeoutId2);
-                        resolve({ server, latency: null, online: false, error: '无法连接' });
-                    });
+                if (err.name === 'AbortError') {
+                    resolve({ server, latency: null, online: false, error: '超时' });
+                } else {
+                    imagePing(server).then(resolve);
+                }
             });
+    });
+}
+
+// 回退：Image ping + no-cors fetch 检测
+function imagePing(server) {
+    return new Promise((resolve) => {
+        const img = new Image();
+        let settled = false;
+        const start = performance.now();
+
+        const finish = (online, latency, error) => {
+            if (settled) return;
+            settled = true;
+            resolve({ server, latency, online, error });
+        };
+
+        // Image ping：服务器有 TCP 响应（包括拒绝）即视为可达
+        img.onload = () => finish(true, Math.round(performance.now() - start), null);
+        img.onerror = () => finish(true, Math.round(performance.now() - start), null);
+        img.src = 'http://' + server.ip + '/favicon.ico?' + Date.now();
+
+        // 超时后尝试 no-cors fetch
+        setTimeout(() => {
+            if (settled) return;
+            fetch('http://' + server.ip, {
+                method: 'HEAD',
+                signal: AbortSignal.timeout(4000),
+                mode: 'no-cors',
+            })
+                .then(() => finish(true, Math.round(performance.now() - start), null))
+                .catch(() => finish(false, null, '无法连接'));
+        }, 3000);
     });
 }
 
