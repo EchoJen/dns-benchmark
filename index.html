@@ -51,6 +51,15 @@
                         <option value="亚洲">🌏 亚洲</option>
                     </select>
                 </label>
+                <label class="filter-label">
+                    <span class="filter-icon">📡</span>
+                    <select id="protocolFilter" onchange="filterServers()">
+                        <option value="all">所有协议</option>
+                        <option value="doh">DoH</option>
+                        <option value="dot">DoT</option>
+                        <option value="doq">DoQ</option>
+                    </select>
+                </label>
             </div>
         </section>
 
@@ -110,12 +119,13 @@
                                 提供商 <span class="sort-arrow" id="sortArrowProvider">⇅</span>
                             </th>
                             <th class="col-region">地区</th>
+                            <th class="col-protocol">协议</th>
                             <th class="col-status">状态</th>
                         </tr>
                     </thead>
                     <tbody id="dnsTableBody">
                         <tr class="empty-row">
-                            <td colspan="7" class="empty-cell">
+                            <td colspan="8" class="empty-cell">
                                 <div class="empty-state">
                                     <span class="empty-icon">📡</span>
                                     <p>点击 <strong>"开始测速"</strong> 测试所有 DNS 服务器延迟</p>

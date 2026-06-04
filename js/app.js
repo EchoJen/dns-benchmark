@@ -1,80 +1,253 @@
 ﻿// ============ DNS 服务器数据库 ============
 const DNS_SERVERS = [
-    // === 全球公共 DNS ===
-    { name: 'Cloudflare', ip: '1.1.1.1', ipv6: '2606:4700:4700::1111', doh: 'https://cloudflare-dns.com/dns-query', provider: 'Cloudflare', region: '全球' },
-    { name: 'Cloudflare (备用)', ip: '1.0.0.1', ipv6: '2606:4700:4700::1001', doh: 'https://cloudflare-dns.com/dns-query', provider: 'Cloudflare', region: '全球' },
-    { name: 'Google DNS', ip: '8.8.8.8', ipv6: '2001:4860:4860::8888', doh: 'https://dns.google/dns-query', provider: 'Google', region: '全球' },
-    { name: 'Google DNS (备用)', ip: '8.8.4.4', ipv6: '2001:4860:4860::8844', doh: 'https://dns.google/dns-query', provider: 'Google', region: '全球' },
-    { name: 'Quad9', ip: '9.9.9.9', ipv6: '2620:fe::fe', doh: 'https://dns.quad9.net/dns-query', provider: 'Quad9', region: '全球' },
-    { name: 'Quad9 (备用)', ip: '149.112.112.112', ipv6: '2620:fe::9', doh: 'https://dns.quad9.net/dns-query', provider: 'Quad9', region: '全球' },
-    { name: 'OpenDNS', ip: '208.67.222.222', ipv6: '2620:119:35::35', doh: 'https://doh.opendns.com/dns-query', provider: 'Cisco', region: '北美' },
-    { name: 'OpenDNS (备用)', ip: '208.67.220.220', ipv6: '2620:119:53::53', doh: 'https://doh.opendns.com/dns-query', provider: 'Cisco', region: '北美' },
-    { name: 'AdGuard DNS', ip: '94.140.14.14', ipv6: '2a10:50c0::ad1:ff', doh: 'https://dns.adguard-dns.com/dns-query', provider: 'AdGuard', region: '欧洲' },
-    { name: 'AdGuard DNS (备用)', ip: '94.140.15.15', ipv6: '2a10:50c0::ad2:ff', doh: 'https://dns.adguard-dns.com/dns-query', provider: 'AdGuard', region: '欧洲' },
-    { name: 'AdGuard (家庭保护)', ip: '94.140.14.15', ipv6: '2a10:50c0::bad1:ff', doh: 'https://dns-family.adguard-dns.com/dns-query', provider: 'AdGuard', region: '欧洲' },
-    { name: 'Mullvad DNS', ip: '194.242.2.2', ipv6: '2a07:e340::2', doh: 'https://dns.mullvad.net/dns-query', provider: 'Mullvad', region: '欧洲' },
-    { name: 'Comodo Secure', ip: '8.26.56.26', doh: 'https://dns.aa.net.uk/dns-query', provider: 'Comodo', region: '全球' },
-    { name: 'UncensoredDNS', ip: '91.239.100.100', ipv6: '2001:67c:28a4::', doh: 'https://unicast.censurfridns.dk/dns-query', provider: 'UncensoredDNS', region: '欧洲' },
-    { name: 'DNS.SB', ip: '185.222.222.222', ipv6: '2a09::', doh: 'https://doh.dns.sb/dns-query', provider: 'DNS.SB', region: '全球' },
-    { name: 'DNS.SB (备用)', ip: '45.11.45.11', doh: 'https://doh.dns.sb/dns-query', provider: 'DNS.SB', region: '全球' },
-    { name: 'CleanBrowsing (安全)', ip: '185.228.168.9', ipv6: '2a0d:2a00:1::2', doh: 'https://doh.cleanbrowsing.org/doh/security-filter/', provider: 'CleanBrowsing', region: '北美' },
-    { name: 'CleanBrowsing (成人过滤)', ip: '185.228.168.10', ipv6: '2a0d:2a00:1::3', doh: 'https://doh.cleanbrowsing.org/doh/adult-filter/', provider: 'CleanBrowsing', region: '北美' },
-    { name: 'CleanBrowsing (家庭)', ip: '185.228.168.168', ipv6: '2a0d:2a00:1::1', doh: 'https://doh.cleanbrowsing.org/doh/family-filter/', provider: 'CleanBrowsing', region: '北美' },
-    { name: 'NextDNS', ip: '45.90.28.190', ipv6: '2a07:a8c0::c5:65e', doh: 'https://dns.nextdns.io/c565e0', provider: 'NextDNS', region: '北美' },
-    { name: 'Yandex DNS', ip: '77.88.8.8', ipv6: '2a02:6b8::feed:0ff', doh: 'https://common.dot.dns.yandex.net/dns-query', provider: 'Yandex', region: '欧洲' },
-    { name: 'Yandex DNS (备用)', ip: '77.88.8.1', ipv6: '2a02:6b8:0:1::feed:0ff', provider: 'Yandex', region: '欧洲' },
-    { name: 'Verisign', ip: '64.6.64.6', ipv6: '2620:74:1b::1:1', doh: 'https://doh.verisign.com/dns-query', provider: 'Verisign', region: '北美' },
-    { name: 'Bahnhof', ip: '194.17.185.100', ipv6: '2a03:5bc0:1:d00::100', provider: 'Bahnhof', region: '欧洲' },
-    { name: 'DNSWatch', ip: '84.200.69.80', ipv6: '2001:1608:10:25::1c04:b12f', doh: 'https://dns.dns-over-https.com/dns-query', provider: 'DNSWatch', region: '欧洲' },
+    // ═══════════════════════════════════════════════════════════════
+    // 全球公共 DNS  —  DoH + DoT + DoQ 全协议支持
+    // ═══════════════════════════════════════════════════════════════
+    { name: 'Cloudflare', ip: '1.1.1.1', ipv6: '2606:4700:4700::1111',
+      doh: 'https://cloudflare-dns.com/dns-query',
+      dot: '1.1.1.1:853', doq: '1.1.1.1:853',
+      protocols: ['doh','dot','doq'], provider: 'Cloudflare', region: '全球' },
+    { name: 'Cloudflare (备用)', ip: '1.0.0.1', ipv6: '2606:4700:4700::1001',
+      doh: 'https://cloudflare-dns.com/dns-query',
+      dot: '1.0.0.1:853', doq: '1.0.0.1:853',
+      protocols: ['doh','dot','doq'], provider: 'Cloudflare', region: '全球' },
+    { name: 'Google DNS', ip: '8.8.8.8', ipv6: '2001:4860:4860::8888',
+      doh: 'https://dns.google/dns-query',
+      dot: 'dns.google:853', doq: null,
+      protocols: ['doh','dot'], provider: 'Google', region: '全球' },
+    { name: 'Google DNS (备用)', ip: '8.8.4.4', ipv6: '2001:4860:4860::8844',
+      doh: 'https://dns.google/dns-query',
+      dot: 'dns.google:853', doq: null,
+      protocols: ['doh','dot'], provider: 'Google', region: '全球' },
+    { name: 'Quad9', ip: '9.9.9.9', ipv6: '2620:fe::fe',
+      doh: 'https://dns.quad9.net/dns-query',
+      dot: '9.9.9.9:853', doq: '9.9.9.9:853',
+      protocols: ['doh','dot','doq'], provider: 'Quad9', region: '全球' },
+    { name: 'Quad9 (备用)', ip: '149.112.112.112', ipv6: '2620:fe::9',
+      doh: 'https://dns.quad9.net/dns-query',
+      dot: '149.112.112.112:853', doq: '149.112.112.112:853',
+      protocols: ['doh','dot','doq'], provider: 'Quad9', region: '全球' },
 
-    // === 中国 DNS ===
-    { name: '阿里 DNS', ip: '223.5.5.5', ipv6: '2400:3200::1', doh: 'https://dns.alidns.com/dns-query', provider: '阿里巴巴', region: '中国' },
-    { name: '阿里 DNS (备用)', ip: '223.6.6.6', ipv6: '2400:3200:baba::1', doh: 'https://dns.alidns.com/dns-query', provider: '阿里巴巴', region: '中国' },
-    { name: 'DNSPod (腾讯)', ip: '119.29.29.29', doh: 'https://doh.pub/dns-query', provider: '腾讯 DNSPod', region: '中国' },
-    { name: '114DNS', ip: '114.114.114.114', ipv6: '2400:da00::6666', provider: '114DNS', region: '中国' },
-    { name: '114DNS (备用)', ip: '114.114.115.115', provider: '114DNS', region: '中国' },
-    { name: '百度 DNS', ip: '180.76.76.76', provider: '百度', region: '中国' },
-    { name: '360 DNS (DNSPod)', ip: '101.226.4.6', provider: '360 / DNSPod', region: '中国' },
-    { name: 'OneDNS', ip: '117.50.10.10', ipv6: '2402:4e00:1::1', doh: 'https://doh.onedns.net/dns-query', provider: 'OneDNS', region: '中国' },
-    { name: 'OneDNS (备用)', ip: '52.80.52.52', provider: 'OneDNS', region: '中国' },
-    { name: '中国电信 DNS', ip: '202.96.209.133', provider: '中国电信', region: '中国' },
-    { name: '中国联通 DNS', ip: '210.22.84.3', provider: '中国联通', region: '中国' },
-    { name: '中国移动 DNS', ip: '211.136.112.50', provider: '中国移动', region: '中国' },
+    // ── DoH + DoT ──
+    { name: 'OpenDNS', ip: '208.67.222.222', ipv6: '2620:119:35::35',
+      doh: 'https://doh.opendns.com/dns-query',
+      dot: '208.67.222.222:853', doq: null,
+      protocols: ['doh','dot'], provider: 'Cisco', region: '北美' },
+    { name: 'OpenDNS (备用)', ip: '208.67.220.220', ipv6: '2620:119:53::53',
+      doh: 'https://doh.opendns.com/dns-query',
+      dot: '208.67.220.220:853', doq: null,
+      protocols: ['doh','dot'], provider: 'Cisco', region: '北美' },
+    { name: 'NextDNS', ip: '45.90.28.190', ipv6: '2a07:a8c0::c5:65e',
+      doh: 'https://dns.nextdns.io/c565e0',
+      dot: '45.90.28.190:853', doq: '45.90.28.190:853',
+      protocols: ['doh','dot','doq'], provider: 'NextDNS', region: '北美' },
 
-    // === 北美 DNS ===
-    { name: 'Comodo (主)', ip: '8.26.56.26', provider: 'Comodo', region: '北美' },
-    { name: 'Comodo (辅)', ip: '8.20.247.20', provider: 'Comodo', region: '北美' },
-    { name: 'Hurricane Electric', ip: '74.82.42.42', ipv6: '2001:470:20::2', provider: 'Hurricane Electric', region: '北美' },
-    { name: 'CenturyLink', ip: '205.171.3.65', ipv6: '2001:1890:1c::1', provider: 'CenturyLink', region: '北美' },
-    { name: 'Norton ConnectSafe', ip: '199.85.126.10', provider: 'Norton', region: '北美' },
-    { name: 'Level3', ip: '209.244.0.3', provider: 'Level3 (CenturyLink)', region: '北美' },
-    { name: 'Level3 (备用)', ip: '209.244.0.4', provider: 'Level3 (CenturyLink)', region: '北美' },
-    { name: 'Cisco OpenDNS (安全)', ip: '208.67.222.123', doh: 'https://doh.opendns.com/dns-query', provider: 'Cisco', region: '北美' },
-    { name: 'Cox Communications', ip: '68.105.28.11', provider: 'Cox', region: '北美' },
-    { name: 'SafeDNS', ip: '195.46.39.39', provider: 'SafeDNS', region: '北美' },
+    // ── DoH + DoT + DoQ ──
+    { name: 'AdGuard DNS', ip: '94.140.14.14', ipv6: '2a10:50c0::ad1:ff',
+      doh: 'https://dns.adguard-dns.com/dns-query',
+      dot: '94.140.14.14:853', doq: '94.140.14.14:784',
+      protocols: ['doh','dot','doq'], provider: 'AdGuard', region: '欧洲' },
+    { name: 'AdGuard DNS (备用)', ip: '94.140.15.15', ipv6: '2a10:50c0::ad2:ff',
+      doh: 'https://dns.adguard-dns.com/dns-query',
+      dot: '94.140.15.15:853', doq: '94.140.15.15:784',
+      protocols: ['doh','dot','doq'], provider: 'AdGuard', region: '欧洲' },
+    { name: 'AdGuard (家庭保护)', ip: '94.140.14.15', ipv6: '2a10:50c0::bad1:ff',
+      doh: 'https://dns-family.adguard-dns.com/dns-query',
+      dot: '94.140.14.15:853', doq: null,
+      protocols: ['doh','dot'], provider: 'AdGuard', region: '欧洲' },
 
-    // === 欧洲 DNS ===
-    { name: 'CZ.NIC', ip: '193.17.47.1', ipv6: '2001:148f:ffff::1', doh: 'https://dns.odvr.nic.cz/dns-query', provider: 'CZ.NIC', region: '欧洲' },
-    { name: 'SWITCH', ip: '130.59.31.248', ipv6: '2001:620:0:ff::2', provider: 'SWITCH', region: '欧洲' },
-    { name: 'Freenom World', ip: '80.80.80.80', ipv6: '2a00:5a60::ad1:0ff', provider: 'Freenom', region: '欧洲' },
-    { name: 'GreenTeam', ip: '81.218.119.11', ipv6: '2001:4d88:1:1:0:1:0:1', provider: 'GreenTeam', region: '欧洲' },
-    { name: 'Digitale Gesellschaft', ip: '185.95.218.42', ipv6: '2a05:fc84::42', doh: 'https://dns.digitale-gesellschaft.ch/dns-query', provider: 'Digitale Gesellschaft', region: '欧洲' },
-    { name: 'Digitalcourage', ip: '46.182.19.48', ipv6: '2a02:2970:1000::19:48', doh: 'https://dns.digitalcourage.eu/dns-query', provider: 'Digitalcourage', region: '欧洲' },
-    { name: 'Fundacio puntCAT', ip: '109.69.8.51', provider: 'puntCAT', region: '欧洲' },
-    { name: 'DNS.WATCH', ip: '84.200.69.80', ipv6: '2001:1608:10:25::1c04:b12f', provider: 'DNS.WATCH', region: '欧洲' },
+    // ── DoH only ──
+    { name: 'Mullvad DNS', ip: '194.242.2.2', ipv6: '2a07:e340::2',
+      doh: 'https://dns.mullvad.net/dns-query',
+      dot: '194.242.2.2:853', doq: null,
+      protocols: ['doh','dot'], provider: 'Mullvad', region: '欧洲' },
+    { name: 'UncensoredDNS', ip: '91.239.100.100', ipv6: '2001:67c:28a4::',
+      doh: 'https://unicast.censurfridns.dk/dns-query',
+      dot: '91.239.100.100:853', doq: null,
+      protocols: ['doh','dot'], provider: 'UncensoredDNS', region: '欧洲' },
+    { name: 'DNS.SB', ip: '185.222.222.222', ipv6: '2a09::',
+      doh: 'https://doh.dns.sb/dns-query',
+      dot: 'dot.sb:853', doq: '185.222.222.222:853',
+      protocols: ['doh','dot','doq'], provider: 'DNS.SB', region: '全球' },
+    { name: 'DNS.SB (备用)', ip: '45.11.45.11',
+      doh: 'https://doh.dns.sb/dns-query',
+      dot: 'dot.sb:853', doq: '185.222.222.222:853',
+      protocols: ['doh','dot','doq'], provider: 'DNS.SB', region: '全球' },
+    { name: 'CleanBrowsing (安全)', ip: '185.228.168.9', ipv6: '2a0d:2a00:1::2',
+      doh: 'https://doh.cleanbrowsing.org/doh/security-filter/',
+      dot: '185.228.168.9:853', doq: null,
+      protocols: ['doh','dot'], provider: 'CleanBrowsing', region: '北美' },
+    { name: 'CleanBrowsing (成人过滤)', ip: '185.228.168.10', ipv6: '2a0d:2a00:1::3',
+      doh: 'https://doh.cleanbrowsing.org/doh/adult-filter/',
+      dot: '185.228.168.10:853', doq: null,
+      protocols: ['doh','dot'], provider: 'CleanBrowsing', region: '北美' },
+    { name: 'CleanBrowsing (家庭)', ip: '185.228.168.168', ipv6: '2a0d:2a00:1::1',
+      doh: 'https://doh.cleanbrowsing.org/doh/family-filter/',
+      dot: '185.228.168.168:853', doq: null,
+      protocols: ['doh','dot'], provider: 'CleanBrowsing', region: '北美' },
+    { name: 'Yandex DNS', ip: '77.88.8.8', ipv6: '2a02:6b8::feed:0ff',
+      doh: 'https://common.dot.dns.yandex.net/dns-query',
+      dot: null, doq: null,
+      protocols: ['doh'], provider: 'Yandex', region: '欧洲' },
+    { name: 'Verisign', ip: '64.6.64.6', ipv6: '2620:74:1b::1:1',
+      doh: 'https://doh.verisign.com/dns-query',
+      dot: '64.6.64.6:853', doq: null,
+      protocols: ['doh','dot'], provider: 'Verisign', region: '北美' },
+    { name: 'DNSWatch', ip: '84.200.69.80', ipv6: '2001:1608:10:25::1c04:b12f',
+      doh: 'https://dns.dns-over-https.com/dns-query',
+      dot: '84.200.69.80:853', doq: null,
+      protocols: ['doh','dot'], provider: 'DNSWatch', region: '欧洲' },
+    { name: 'Comodo Secure', ip: '8.26.56.26',
+      doh: 'https://dns.aa.net.uk/dns-query',
+      dot: '8.26.56.26:853', doq: null,
+      protocols: ['doh','dot'], provider: 'Comodo', region: '全球' },
+    { name: 'CZ.NIC', ip: '193.17.47.1', ipv6: '2001:148f:ffff::1',
+      doh: 'https://dns.odvr.nic.cz/dns-query',
+      dot: '193.17.47.1:853', doq: null,
+      protocols: ['doh','dot'], provider: 'CZ.NIC', region: '欧洲' },
+    { name: 'Digitale Gesellschaft', ip: '185.95.218.42', ipv6: '2a05:fc84::42',
+      doh: 'https://dns.digitale-gesellschaft.ch/dns-query',
+      dot: '185.95.218.42:853', doq: null,
+      protocols: ['doh','dot'], provider: 'Digitale Gesellschaft', region: '欧洲' },
+    { name: 'Digitalcourage', ip: '46.182.19.48', ipv6: '2a02:2970:1000::19:48',
+      doh: 'https://dns.digitalcourage.eu/dns-query',
+      dot: '46.182.19.48:853', doq: null,
+      protocols: ['doh','dot'], provider: 'Digitalcourage', region: '欧洲' },
 
-    // === 亚洲 / 其他地区 DNS ===
-    { name: 'Singapore (SG)', ip: '165.21.83.88', provider: 'SingNet', region: '亚洲' },
-    { name: 'HKUST DNS', ip: '143.89.80.10', provider: 'HKUST', region: '亚洲' },
-    { name: '韩国 DNS (KT)', ip: '168.126.63.1', provider: 'KT Korea', region: '亚洲' },
-    { name: '韩国 DNS (备用)', ip: '168.126.63.2', provider: 'KT Korea', region: '亚洲' },
-    { name: '日本 DNS (IIJ)', ip: '203.154.192.7', provider: 'IIJ Japan', region: '亚洲' },
-    { name: '日本 DNS (备用)', ip: '210.138.175.1', provider: 'IIJ Japan', region: '亚洲' },
-    { name: '台湾 DNS (HiNet)', ip: '168.95.1.1', provider: 'HiNet', region: '亚洲' },
-    { name: '台湾 DNS (备用)', ip: '168.95.192.1', provider: 'HiNet', region: '亚洲' },
-    { name: '印度 DNS (BBNL)', ip: '218.248.255.242', provider: 'BBNL India', region: '亚洲' },
-    { name: '澳大利亚 DNS', ip: '139.130.4.4', provider: 'Telstra', region: '亚洲' },
-    { name: '新西兰 DNS', ip: '210.55.5.1', provider: 'Spark NZ', region: '亚洲' },
+    // ═══════════════════════════════════════════════════════════════
+    // 中国 DNS  —  DoH + DoT
+    // ═══════════════════════════════════════════════════════════════
+    { name: '阿里 DNS', ip: '223.5.5.5', ipv6: '2400:3200::1',
+      doh: 'https://dns.alidns.com/dns-query',
+      dot: 'dns.alidns.com:853', doq: null,
+      protocols: ['doh','dot'], provider: '阿里巴巴', region: '中国' },
+    { name: '阿里 DNS (备用)', ip: '223.6.6.6', ipv6: '2400:3200:baba::1',
+      doh: 'https://dns.alidns.com/dns-query',
+      dot: 'dns.alidns.com:853', doq: null,
+      protocols: ['doh','dot'], provider: '阿里巴巴', region: '中国' },
+    { name: 'DNSPod (腾讯)', ip: '119.29.29.29',
+      doh: 'https://doh.pub/dns-query',
+      dot: null, doq: null,
+      protocols: ['doh'], provider: '腾讯 DNSPod', region: '中国' },
+    { name: '114DNS', ip: '114.114.114.114', ipv6: '2400:da00::6666',
+      doh: null, dot: '114.114.114.114:853', doq: null,
+      protocols: ['dot'], provider: '114DNS', region: '中国' },
+    { name: '114DNS (备用)', ip: '114.114.115.115',
+      doh: null, dot: '114.114.115.115:853', doq: null,
+      protocols: ['dot'], provider: '114DNS', region: '中国' },
+    { name: '百度 DNS', ip: '180.76.76.76',
+      doh: null, dot: '180.76.76.76:853', doq: null,
+      protocols: ['dot'], provider: '百度', region: '中国' },
+    { name: '360 DNS (DNSPod)', ip: '101.226.4.6',
+      doh: null, dot: null, doq: null,
+      protocols: ['udp'], provider: '360 / DNSPod', region: '中国' },
+    { name: 'OneDNS', ip: '117.50.10.10', ipv6: '2402:4e00:1::1',
+      doh: 'https://doh.onedns.net/dns-query',
+      dot: '117.50.10.10:853', doq: null,
+      protocols: ['doh','dot'], provider: 'OneDNS', region: '中国' },
+    { name: 'OneDNS (备用)', ip: '52.80.52.52',
+      doh: null, dot: null, doq: null,
+      protocols: ['udp'], provider: 'OneDNS', region: '中国' },
+
+    // ═══════════════════════════════════════════════════════════════
+    // ISP 默认 DNS  —  仅传统 UDP (无可测试端点)
+    // ═══════════════════════════════════════════════════════════════
+    { name: '中国电信 DNS', ip: '202.96.209.133',
+      doh: null, dot: null, doq: null,
+      protocols: ['udp'], provider: '中国电信', region: '中国' },
+    { name: '中国联通 DNS', ip: '210.22.84.3',
+      doh: null, dot: null, doq: null,
+      protocols: ['udp'], provider: '中国联通', region: '中国' },
+    { name: '中国移动 DNS', ip: '211.136.112.50',
+      doh: null, dot: null, doq: null,
+      protocols: ['udp'], provider: '中国移动', region: '中国' },
+
+    // ═══════════════════════════════════════════════════════════════
+    // 北美 DNS
+    // ═══════════════════════════════════════════════════════════════
+    { name: 'Comodo (主)', ip: '8.26.56.26',
+      doh: null, dot: null, doq: null,
+      protocols: ['udp'], provider: 'Comodo', region: '北美' },
+    { name: 'Comodo (辅)', ip: '8.20.247.20',
+      doh: null, dot: null, doq: null,
+      protocols: ['udp'], provider: 'Comodo', region: '北美' },
+    { name: 'Hurricane Electric', ip: '74.82.42.42', ipv6: '2001:470:20::2',
+      doh: null, dot: null, doq: null,
+      protocols: ['udp'], provider: 'Hurricane Electric', region: '北美' },
+    { name: 'CenturyLink', ip: '205.171.3.65', ipv6: '2001:1890:1c::1',
+      doh: null, dot: null, doq: null,
+      protocols: ['udp'], provider: 'CenturyLink', region: '北美' },
+    { name: 'Norton ConnectSafe', ip: '199.85.126.10',
+      doh: null, dot: null, doq: null,
+      protocols: ['udp'], provider: 'Norton', region: '北美' },
+    { name: 'Level3', ip: '209.244.0.3',
+      doh: null, dot: null, doq: null,
+      protocols: ['udp'], provider: 'Level3 (CenturyLink)', region: '北美' },
+    { name: 'Level3 (备用)', ip: '209.244.0.4',
+      doh: null, dot: null, doq: null,
+      protocols: ['udp'], provider: 'Level3 (CenturyLink)', region: '北美' },
+    { name: 'Cox Communications', ip: '68.105.28.11',
+      doh: null, dot: null, doq: null,
+      protocols: ['udp'], provider: 'Cox', region: '北美' },
+    { name: 'SafeDNS', ip: '195.46.39.39',
+      doh: null, dot: null, doq: null,
+      protocols: ['udp'], provider: 'SafeDNS', region: '北美' },
+
+    // ═══════════════════════════════════════════════════════════════
+    // 欧洲 DNS
+    // ═══════════════════════════════════════════════════════════════
+    { name: 'SWITCH', ip: '130.59.31.248', ipv6: '2001:620:0:ff::2',
+      doh: null, dot: null, doq: null,
+      protocols: ['udp'], provider: 'SWITCH', region: '欧洲' },
+    { name: 'Freenom World', ip: '80.80.80.80', ipv6: '2a00:5a60::ad1:0ff',
+      doh: null, dot: null, doq: null,
+      protocols: ['udp'], provider: 'Freenom', region: '欧洲' },
+    { name: 'GreenTeam', ip: '81.218.119.11', ipv6: '2001:4d88:1:1:0:1:0:1',
+      doh: null, dot: null, doq: null,
+      protocols: ['udp'], provider: 'GreenTeam', region: '欧洲' },
+    { name: 'Fundacio puntCAT', ip: '109.69.8.51',
+      doh: null, dot: null, doq: null,
+      protocols: ['udp'], provider: 'puntCAT', region: '欧洲' },
+    { name: 'Bahnhof', ip: '194.17.185.100', ipv6: '2a03:5bc0:1:d00::100',
+      doh: null, dot: null, doq: null,
+      protocols: ['udp'], provider: 'Bahnhof', region: '欧洲' },
+
+    // ═══════════════════════════════════════════════════════════════
+    // 亚洲 / 其他地区 DNS
+    // ═══════════════════════════════════════════════════════════════
+    { name: 'Singapore (SingNet)', ip: '165.21.83.88',
+      doh: null, dot: null, doq: null,
+      protocols: ['udp'], provider: 'SingNet', region: '亚洲' },
+    { name: 'HKUST DNS', ip: '143.89.80.10',
+      doh: null, dot: null, doq: null,
+      protocols: ['udp'], provider: 'HKUST', region: '亚洲' },
+    { name: '韩国 KT DNS', ip: '168.126.63.1',
+      doh: null, dot: null, doq: null,
+      protocols: ['udp'], provider: 'KT Korea', region: '亚洲' },
+    { name: '韩国 KT (备用)', ip: '168.126.63.2',
+      doh: null, dot: null, doq: null,
+      protocols: ['udp'], provider: 'KT Korea', region: '亚洲' },
+    { name: '日本 IIJ DNS', ip: '203.154.192.7',
+      doh: null, dot: null, doq: null,
+      protocols: ['udp'], provider: 'IIJ Japan', region: '亚洲' },
+    { name: '日本 IIJ (备用)', ip: '210.138.175.1',
+      doh: null, dot: null, doq: null,
+      protocols: ['udp'], provider: 'IIJ Japan', region: '亚洲' },
+    { name: '台湾 HiNet DNS', ip: '168.95.1.1',
+      doh: null, dot: null, doq: null,
+      protocols: ['udp'], provider: 'HiNet', region: '亚洲' },
+    { name: '台湾 HiNet (备用)', ip: '168.95.192.1',
+      doh: null, dot: null, doq: null,
+      protocols: ['udp'], provider: 'HiNet', region: '亚洲' },
+    { name: '印度 BBNL DNS', ip: '218.248.255.242',
+      doh: null, dot: null, doq: null,
+      protocols: ['udp'], provider: 'BBNL India', region: '亚洲' },
+    { name: '澳大利亚 Telstra', ip: '139.130.4.4',
+      doh: null, dot: null, doq: null,
+      protocols: ['udp'], provider: 'Telstra', region: '亚洲' },
+    { name: '新西兰 Spark', ip: '210.55.5.1',
+      doh: null, dot: null, doq: null,
+      protocols: ['udp'], provider: 'Spark NZ', region: '亚洲' },
 ];
 
 // ============ 配置 ============
@@ -275,6 +448,7 @@ function renderResults(results) {
 
         const regionFlag = getRegionFlag(s.region);
         const providerHtml = `<span class="provider-tag">${s.provider}</span>`;
+        const protocolHtml = renderProtocolBadges(s.protocols);
 
         html += `
             <tr>
@@ -287,6 +461,7 @@ function renderResults(results) {
                 </td>
                 <td>${providerHtml}</td>
                 <td class="col-region"><span class="region-flag">${regionFlag}</span></td>
+                <td class="col-protocol">${protocolHtml}</td>
                 <td class="col-status">${statusHtml}</td>
             </tr>`;
     });
@@ -304,6 +479,16 @@ function getRegionFlag(region) {
     };
     return flags[region] || '🌍';
 }
+// ============ 协议徽章渲染 ============
+function renderProtocolBadges(protocols) {
+    if (!protocols || protocols.length === 0) return '';
+    const labels = { doh: 'DoH', dot: 'DoT', doq: 'DoQ', udp: 'UDP' };
+    const classes = { doh: 'proto-doh', dot: 'proto-dot', doq: 'proto-doq' };
+    return protocols.filter(p => p !== 'udp').map(p =>
+        `<span class="proto-badge ${classes[p] || 'proto-udp'}">${labels[p] || p.toUpperCase()}</span>`
+    ).join('');
+}
+
 
 // ============ 统计摘要 ============
 function updateSummary(results) {
@@ -377,6 +562,7 @@ function applySortAndFilter() {
 
     const searchTerm = (document.getElementById('searchInput').value || '').toLowerCase().trim();
     const regionFilter = document.getElementById('regionFilter').value;
+    const protocolFilter = document.getElementById('protocolFilter').value;
 
     let filtered = raw;
     if (searchTerm) {
@@ -388,6 +574,11 @@ function applySortAndFilter() {
     }
     if (regionFilter !== 'all') {
         filtered = filtered.filter(r => r.server.region === regionFilter);
+    }
+    if (protocolFilter !== 'all') {
+        filtered = filtered.filter(r =>
+            r.server.protocols && r.server.protocols.includes(protocolFilter)
+        );
     }
 
     filtered.sort((a, b) => {
